@@ -13,9 +13,11 @@ def apply_discount(price: Decimal, percent: int) -> Decimal:
     ``percent`` must be between 0 and 100 inclusive; anything else raises ``ValueError``.
     A negative price raises ``ValueError``.
     """
-    if not 0 <= percent <= 100:
-        raise ValueError("percent must be between 0 and 100")
     if price < 0:
         raise ValueError("price must not be negative")
+    if not 0 <= percent <= 100:
+        raise ValueError("percent must be between 0 and 100")
+    if percent == 0:
+        return price.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
     discounted = price * (Decimal(100) - Decimal(percent)) / Decimal(100)
     return discounted.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
