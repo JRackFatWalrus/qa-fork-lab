@@ -1,0 +1,36 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Read-only default token. The separate `canary` job references one dummy secret,
+# PWR_CANARY, and prints only its LENGTH (never the value): non-zero on pushes to main,
+# 0 on pull requests opened from forks, where GitHub withholds secrets. The pytest job
+# references no secrets.
+permissions:
+  contents: read
+
+jobs:
+  canary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Secret visibility (length only)
+        env:
+          PWR_CANARY: ${{ secrets.PWR_CANARY }}
+        run: echo "PWR_CANARY length=${#PWR_CANARY} event=${{ github.event_name }} head_repo=${{ github.event.pull_request.head.repo.full_name }}"
+
+  pytest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -e ".[test]"
+      - run: python -m pytest -q
